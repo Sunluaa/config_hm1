@@ -119,10 +119,8 @@ class ShellEmulator:
             print(f"tac: {target}: Error reading file: {e}")
 
     def du(self, args):
-        total_size = 0
-        for entry in self.vfs_archive.getmembers():
-            if entry.name.startswith(self.cwd.lstrip('/')):
-                total_size += entry.size
+        path = self.cwd if not args else os.path.join(self.cwd, args[0]).lstrip('/')
+        total_size = sum(m.size for m in self.vfs_archive.getmembers() if m.name.startswith(path))
         print(f"{total_size} bytes")
     def exit_shell(self):
         print("Exiting shell...")
