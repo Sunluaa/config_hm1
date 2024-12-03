@@ -1,0 +1,6 @@
+ls
+cd dir1
+ls
+cd ..
+tac file1.txt
+du .
