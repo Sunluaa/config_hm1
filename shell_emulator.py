@@ -70,6 +70,64 @@ class ShellEmulator:
         for entry_name in sorted(unique_entries):
             print(entry_name)
 
+    def cd(self, args):
+        if not args or args[0] == "/":
+            self.cwd = "/"
+            return
+
+        target = args[0]
+        if target == "..":
+            if self.cwd == "/":
+                return
+            else:
+                self.cwd = os.path.dirname(self.cwd.rstrip("/"))
+                if not self.cwd:
+                    self.cwd = "/"
+                return
+        elif target == ".":
+            return
+
+        new_dir = os.path.join(self.cwd, target).replace("\\", "/")
+        new_dir = os.path.normpath(new_dir).replace("\\", "/")
+        potential_dirs = [m.name for m in self.vfs_archive.getmembers() if m.isdir()]
+        abs_new_dir = new_dir.lstrip("/")
+
+        for dir_entry in potential_dirs:
+            if dir_entry.strip("/") == abs_new_dir:
+                self.cwd = "/" + abs_new_dir + "/"
+                return
+
+        print(f"cd: {target}: No such file or directory")
+
+
+    def tac(self, args):
+        if not args:
+            print("tac: missing operand")
+            return
+
+            # Формирование пути к файлу относительно текущей директории
+        target = args[0]
+        path = os.path.join(self.cwd, target).lstrip('/')
+
+        # Извлечение содержимого файла
+        try:
+            with self.vfs_archive.extractfile(path) as file:
+                lines = file.read().decode('utf-8').splitlines()
+                for line in reversed(lines):
+                    print(line)
+        except Exception as e:
+            print(f"tac: {target}: Error reading file: {e}")
+
+    def du(self, args):
+        total_size = 0
+        for entry in self.vfs_archive.getmembers():
+            if entry.name.startswith(self.cwd.lstrip('/')):
+                total_size += entry.size
+        print(f"{total_size} bytes")
+    def exit_shell(self):
+        print("Exiting shell...")
+        exit(0)
+
     def run(self):
         try:
             while True:
